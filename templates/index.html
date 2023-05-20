@@ -20,6 +20,9 @@
             <option value="">All Models</option>
         </select>
 
+        <label for="transmission">Transmission:</label>
+        <input type="text" id="transmission" name="Transmission">
+
         <label for="minPrice">Minimum Price:</label>
         <input type="number" id="minPrice" name="min_price">
 
@@ -98,7 +101,8 @@
                             var results = '';
                             $.each(response, function(index, car) {
                                 results += '<div>';
-                                results += '<h3>Photo:' + car.car_photo + '</h3>';
+                                results += '<img src="' + car.car_photo + '" alt="Car Photo">';
+                                results += '<h3>' + car.brand + '</h3>';
                                 results += '<h3>' + car.car_model + '</h3>';
                                 results += '<p>Price: ' + car.price_range + '</p>';
                                 results += '<p>Location: ' + car.location + '</p>';

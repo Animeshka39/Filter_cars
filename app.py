@@ -58,6 +58,7 @@ def carcharacteristics():
         if car:
             car_characteristics = {
                 'car_photo': car['car_photo'],
+                'brand_name': car['brand_name'],
                 'model_id': car['model_id'],
                 'car_model': car['car_model'],
                 'price_range': car['price_range'],
@@ -85,13 +86,14 @@ def filter_cars():
     
     brand_id = request.form.get('brand_id')
     model_id = request.form.get('model_id')
+    transmission = request.form.get('transmission')
     min_price = request.form.get('min_price')
     max_price = request.form.get('max_price')
     min_year = request.form.get('min_year')
     max_year = request.form.get('max_year')
     min_mileage = request.form.get('min_mileage')  
     max_mileage = request.form.get('max_mileage')
-    engine_name = request.form.get('engine_name')
+    engine_name = request.form.get('engine_name')   
     location = request.form.get('location')
     
 
@@ -104,6 +106,9 @@ def filter_cars():
     if model_id:
         query += " AND model_id = %s"
         params.append(model_id)
+    if transmission:
+        query += " AND transmission = %s"
+        params.append(transmission)
     if min_price:
         query += " AND price_range >= %s"
         params.append(min_price)
@@ -137,7 +142,8 @@ def filter_cars():
     filtered_cars = []
     for car in cars:
         filtered_cars.append({
-           'car_photo': car['car_photo'],
+                'car_photo': car['car_photo'],
+                
                 'model_id': car['model_id'],
                 'car_model': car['car_model'],
                 'price_range': car['price_range'],

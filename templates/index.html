@@ -108,10 +108,8 @@
                 carItem += "<p>Engine HP: " + car.engine_hp + "</p>";
                 carItem += "<p>Location: " + car.location + "</p>";
                 carItem += "<p>Seller ID: " + car.seller_id + "</p>";
-                carItem +=
-                "<button class='btn btn-primary seller-info-btn' data-model-id='" +
-                car.model_id +
-                "'>Show Seller Info</button>";
+                carItem += "<button class='btn btn-primary seller-info-btn' data-model-id='" + car.model_id + "'>Show Seller Info</button>";
+                carItem += "<div class='seller-info' style='display: none;'></div>"; // Placeholder for seller info
                 carItem +=
                   "<form class='delete-car-form' method='POST' action='/deletecar'>";
                 carItem +=
@@ -123,16 +121,26 @@
 
                 carList.append(carItem);
               });
-                            // Show Seller Info button click event
-              $(".seller-info-btn").click(function() {
-                var modelId = $(this).data("model-id");
-                var sellerInfoDiv = $("#seller-info-" + modelId);
+                          // Click event listener for "Show Seller Info" button
+              $('.seller-info-btn').click(function() {
+                var modelId = $(this).data('model-id');
+                var sellerInfoContainer = $(this).siblings('.seller-info');
 
-                $.get("/sellers?model_id=" + modelId, function(sellerInfo) {
-                  sellerInfoDiv.html("<p>Seller Name: " + sellerInfo.seller_name + "</p>" +
-                    "<p>Seller Email: " + sellerInfo.seller_email + "</p>" +
-                    "<p>Seller Phone: " + sellerInfo.seller_phone + "</p>" +
-                    "<p>Seller Location: " + sellerInfo.seller_location + "</p>");
+                // Retrieve seller information using AJAX
+                $.get('/sellers', { model_id: modelId }, function(response) {
+                  if (response.length > 0) {
+                    var seller = response[0];
+                    var sellerInfo = "<p>Seller Name: " + seller.seller_name + "</p>";
+                    sellerInfo += "<p>Seller Email: " + seller.seller_email + "</p>";
+                    sellerInfo += "<p>Seller Phone: " + seller.seller_phone + "</p>";
+                    sellerInfo += "<p>Seller Location: " + seller.seller_location + "</p>";
+                    sellerInfoContainer.html(sellerInfo);
+                  } else {
+                    sellerInfoContainer.html("Seller information not found.");
+                  }
+
+                  // Show the seller information container
+                  sellerInfoContainer.show();
                 });
               });
             },

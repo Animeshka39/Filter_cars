@@ -1,135 +1,314 @@
 <!DOCTYPE html>
 <html>
-<head>
-    <title>Car Filter</title>
+  <head>
+    <title>Car Brands</title>
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
-</head>
-<body>
-    <h1>Car Filter</h1>
-    <form id="filterForm">
-        <label for="brandSelect">Brand:</label>
-        <select id="brandSelect" name="brand_id">
-            <option value="">All Brands</option>
-            {% for brand in carbrands %}
-                <option value="{{ brand.brand_id }}">{{ brand.brand_name }}</option>
-            {% endfor %}
-        </select>
+    <script>
+      $(document).ready(function () {
+        // Function to populate car models based on selected brand
+        $("#brand").change(function () {
+          var brandId = $(this).val();
 
-        <label for="modelSelect">Model:</label>
-        <select id="modelSelect" name="model_id">
-            <option value="">All Models</option>
-        </select>
+          $.ajax({
+            url: "/carbrand",
+            type: "POST",
+            data: { brand_id: brandId },
+            success: function (response) {
+              var options = "<option value=''>Select Model</option>";
 
-        <label for="transmission">Transmission:</label>
-        <input type="text" id="transmission" name="Transmission">
+              $.each(response, function (index, car) {
+                options +=
+                  "<option value='" +
+                  car.model_id +
+                  "'>" +
+                  car.car_model +
+                  "</option>";
+              });
 
-        <label for="minPrice">Minimum Price:</label>
-        <input type="number" id="minPrice" name="min_price">
+              $("#model").html(options);
+            },
+          });
+        });
 
-        <label for="maxPrice">Maximum Price:</label>
-        <input type="number" id="maxPrice" name="max_price">
+        // Function to display car details based on selected brand and model
+        $("#model").change(function () {
+          var brandId = $("#brand").val();
+          var modelId = $(this).val();
 
-        <label for="minYear">Minimum Year:</label>
-        <input type="number" id="minYear" name="min_year">
+          $.ajax({
+            url: "/carcharacteristics",
+            type: "POST",
+            data: {
+              brand_id: brandId,
+              model_id: modelId,
+            },
+            success: function (response) {
+              if (!$.isEmptyObject(response)) {
+                $("#car-details").show();
+                $("#car-photo").attr("src", response.car_photo);
+                $("#brand-name").text(response.brand_name);
+                $("#car-model").text(response.car_model);
+                $("#body-type").text(response.body_type);
+                $("#number-doors").text(response.number_doors);
+                $("#price-range").text(response.price_range);
+                $("#year").text(response.year);
+                $("#mileage").text(response.mileage);
+                $("#transmission").text(response.transmission);
+                $("#fuel-type").text(response.fuel_type);
+                $("#color").text(response.color);
+                $("#technical-condition").text(response.technical_condition);
+                $("#customs-cleared").text(response.customs_cleared);
+                $("#driven-from").text(response.driven_from);
+                $("#engine-size").text(response.engine_size);
+                $("#engine-name").text(response.engine_name);
+                $("#engine-hp").text(response.engine_hp);
+                $("#location").text(response.location);
+                $("#seller-id").text(response.seller_id);
+              } else {
+                $("#car-details").hide();
+              }
+            },
+          });
+        });
 
-        <label for="maxYear">Maximum Year:</label>
-        <input type="number" id="maxYear" name="max_year">
+        // Function to filter cars based on selected criteria
+        $("#filter-form").submit(function (e) {
+          e.preventDefault();
 
-        <label for="minMileage">Minimum Mileage:</label>
-        <input type="number" id="minMileage" name="min_mileage">
+          var formData = $(this).serialize();
 
-        <label for="maxMileage">Maximum Mileage:</label>
-        <input type="number" id="maxMileage" name="max_mileage">
+          $.ajax({
+            url: "/filter",
+            type: "POST",
+            data: formData,
+            success: function (response) {
+              var carList = $("#car-list");
 
-        <label for="engineName">Engine Name:</label>
-        <input type="text" id="engineName" name="engine_name">
+              carList.empty();
 
-        <label for="location">Location:</label>
-        <input type="text" id="location" name="location">
+              $.each(response, function (index, car) {
+                var carItem =
+                  "<li><img src='" + car.car_photo + "' alt='Car Photo'>";
+                carItem += "<h3>" + car.car_model + "</h3>";
+                carItem += "<p>Body Type: " + car.body_type + "</p>";
+                carItem += "<p>Number of Doors: " + car.number_doors + "</p>";
+                carItem += "<p>Price Range: " + car.price_range + "</p>";
+                carItem += "<p>Year: " + car.year + "</p>";
+                carItem += "<p>Mileage: " + car.mileage + "</p>";
+                carItem += "<p>Transmission: " + car.transmission + "</p>";
+                carItem += "<p>Fuel Type: " + car.fuel_type + "</p>";
+                carItem += "<p>Color: " + car.color + "</p>";
+                carItem +=
+                  "<p>Technical Condition: " + car.technical_condition + "</p>";
+                carItem +=
+                  "<p>Customs Cleared: " + car.customs_cleared + "</p>";
+                carItem += "<p>Driven From: " + car.driven_from + "</p>";
+                carItem += "<p>Engine Size: " + car.engine_size + "</p>";
+                carItem += "<p>Engine Name: " + car.engine_name + "</p>";
+                carItem += "<p>Engine HP: " + car.engine_hp + "</p>";
+                carItem += "<p>Location: " + car.location + "</p>";
+                carItem += "<p>Seller ID: " + car.seller_id + "</p>";
+                carItem +=
+                  "<form class='delete-car-form' method='POST' action='/deletecar'>";
+                carItem +=
+                  "<input type='hidden' name='model_id' value='" +
+                  car.model_id +
+                  "'>";
+                carItem += "<button type='submit'>Delete Car</button>";
+                carItem += "</form></li>";
 
-        <button type="submit">Filter</button>
+                carList.append(carItem);
+              });
+            },
+          });
+        });
+
+        // Function to handle the delete car form submission
+        $(document).on("submit", ".delete-car-form", function (e) {
+          e.preventDefault();
+
+          var formData = $(this).serialize();
+
+          $.ajax({
+            url: "/deletecar",
+            type: "POST",
+            data: formData,
+            success: function (response) {
+              // Refresh the car list after successful deletion
+              $("#filter-form").submit();
+            },
+          });
+        });
+      });
+    </script>
+  </head>
+  <body>
+    <h1>Car Brands</h1>
+
+    <form id="filter-form" method="POST" action="/filter">
+      <label for="brand">Brand:</label>
+      <select id="brand" name="brand_id">
+        <option value="">Select Brand</option>
+        {% for brand in carbrands %}
+        <option value="{{ brand.brand_id }}">{{ brand.brand_name }}</option>
+        {% endfor %}
+      </select>
+
+      <label for="model">Model:</label>
+      <select id="model" name="model_id">
+        <option value="">Select Model</option>
+      </select>
+
+      <label for="transmission">Transmission:</label>
+      <select id="transmission" name="transmission">
+        <option value="">Any</option>
+        <option value="Automatic">Automatic</option>
+        <option value="CVT">CVT</option>
+        <option value="Manual">Manual</option>
+      </select>
+
+      <label for="body-type">Body Type:</label>
+      <input type="text" id="body_type" name="body_type" />
+
+      <label for="number-doors">Number of Doors:</label>
+      <input type="text" id="number-doors" name="number_doors" />
+
+      <label for="min-price">Min Price:</label>
+      <input type="text" id="min-price" name="min_price" />
+
+      <label for="max-price">Max Price:</label>
+      <input type="text" id="max-price" name="max_price" />
+
+      <label for="min-year">Min Year:</label>
+      <input type="text" id="min-year" name="min_year" />
+
+      <label for="max-year">Max Year:</label>
+      <input type="text" id="max-year" name="max_year" />
+
+      <label for="min-mileage">Min Mileage:</label>
+      <input type="text" id="min-mileage" name="min_mileage" />
+
+      <label for="max-mileage">Max Mileage:</label>
+      <input type="text" id="max-mileage" name="max_mileage" />
+
+      <label for="engine-size">Engine Size:</label>
+      <input type="text" id="engine-size" name="engine_size" />
+
+      <label for="engine-name">Engine Name:</label>
+      <input type="text" id="engine-name" name="engine_name" />
+
+      <label for="engine-hp">Engine HP:</label>
+      <input type="text" id="engine-hp" name="engine_hp" />
+
+      <label for="location">Location:</label>
+      <input type="text" id="location" name="location" />
+
+      <button type="submit">Filter Cars</button>
     </form>
 
-    <div id="results">
-        <!-- Filtered results will be displayed here -->
+    <h2>Car Details</h2>
+    <div id="car-details" style="display: none">
+      <img id="car-photo" src="" alt="Car Photo" />
+      <p>Brand: <span id="brand-name"></span></p>
+      <p>Model: <span id="car-model"></span></p>
+      <p>Body Type: <span id="body-type"></span></p>
+      <p>Number Doors: <span id="number-doors"></span></p>
+      <p>Price Range: <span id="price-range"></span></p>
+      <p>Year: <span id="year"></span></p>
+      <p>Mileage: <span id="mileage"></span></p>
+      <p>Transmission: <span id="transmission"></span></p>
+      <p>Fuel Type: <span id="fuel-type"></span></p>
+      <p>Color: <span id="color"></span></p>
+      <p>Technical Condition: <span id="technical-condition"></span></p>
+      <p>Customs Cleared: <span id="customs-cleared"></span></p>
+      <p>Driven From: <span id="driven-from"></span></p>
+      <p>Engine Size: <span id="engine-size"></span></p>
+      <p>Engine Name: <span id="engine-name"></span></p>
+      <p>Engine HP: <span id="engine-hp"></span></p>
+      <p>Location: <span id="location"></span></p>
+      <p>Seller ID: <span id="seller-id"></span></p>
     </div>
 
-    <script>
-        $(document).ready(function() {
-            // Handle brand selection change event
-            $('#brandSelect').on('change', function() {
-                var brandId = $(this).val();
+    <h2>Car List</h2>
+    <ul id="car-list">
+      <!-- Cars will be dynamically added here -->
+    </ul>
 
-                // Clear model select options
-                $('#modelSelect').empty().append('<option value="">All Models</option>');
-
-                // Fetch models based on selected brand
-                if (brandId !== '') {
-                    $.ajax({
-                        url: '/carbrand',
-                        method: 'POST',
-                        data: { brand_id: brandId },
-                        success: function(response) {
-                            if (response.length > 0) {
-                                // Add model options to select element
-                                $.each(response, function(index, car) {
-                                    $('#modelSelect').append('<option value="' + car.model_id + '">' + car.car_model + '</option>');
-                                });
-                            }
-                        },
-                        error: function() {
-                            console.log('Error occurred while fetching models.');
-                        }
-                    });
-                }
-            });
-
-            // Handle form submission
-            $('#filterForm').on('submit', function(e) {
-                e.preventDefault();
-
-                var formData = $(this).serialize();
-
-                // Perform filter request
-                $.ajax({
-                    url: '/filter',
-                    method: 'POST',
-                    data: formData,
-                    success: function(response) {
-                        if (response.length > 0) {
-                            // Display filtered results
-                            var results = '';
-                            $.each(response, function(index, car) {
-                                results += '<div>';
-                                results += '<img src="' + car.car_photo + '" alt="Car Photo">';
-                                results += '<h3>' + car.brand + '</h3>';
-                                results += '<h3>' + car.car_model + '</h3>';
-                                results += '<p>Price: ' + car.price_range + '</p>';
-                                results += '<p>Location: ' + car.location + '</p>';
-                                results += '<p>Year: ' + car.year + '</p>';
-                                results += '<p>Engine: ' + car.engine_name + '</p>';
-                                results += '<p>Mileage: ' + car.mileage + '</p>';
-                                results += '<p>Transmission: ' + car.transmission + '</p>';
-                                results += '<p>Fuel Type: ' + car.fuel_type + '</p>';
-                                results += '<p>Color: ' + car.color + '</p>';
-                                results += '<p>Technical Condition: ' + car.technical_condition + '</p>';
-                                results += '<p>Customs Cleared: ' + (car.customs_cleared ? 'Yes' : 'No') + '</p>';
-                                results += '<p>Driven From: ' + car.driven_from + '</p>';
-                                results += '<p>Seller: ' + car.seller_id + '</p>';
-                                results += '</div>';
-                            });
-                            $('#results').html(results);
-                        } else {
-                            // No results found
-                            $('#results').html('<p>No results found.</p>');
-                        }
-                    },
-                    error: function() {
-                        console.log('Error occurred while filtering cars.');
-                    }
-                });
-            });
-        });
-    </script>
-</body>
+    <div class="add-car-form">
+      <h2>Add a Car</h2>
+      <form action="{{ url_for('add_car') }}" method="POST">
+        <label for="brand_id">Brand:</label>
+        <select id="brand_id" name="brand_id" required>
+          {% for carbrand in carbrands %}
+          <option value="{{ carbrand.brand_id }}">
+            {{ carbrand.brand_name }}
+          </option>
+          {% endfor %}
+        </select>
+        <br /><br />
+        <label for="car_model">Model:</label>
+        <input type="text" id="car_model" name="car_model" required />
+        <br /><br />
+        <label for="body_type">Body Type:</label>
+        <input type="text" id="body_type" name="body_type" required />
+        <br /><br />
+        <label for="number_doors">Number of Doors:</label>
+        <input type="text" id="number_doors" name="number_doors" required />
+        <br /><br />
+        <label for="price_range">Price Range:</label>
+        <input type="text" id="price_range" name="price_range" required />
+        <br /><br />
+        <label for="year">Year:</label>
+        <input type="text" id="year" name="year" required />
+        <br /><br />
+        <label for="mileage">Mileage:</label>
+        <input type="text" id="mileage" name="mileage" required />
+        <br /><br />
+        <label for="transmission">Transmission:</label>
+        <input type="text" id="transmission" name="transmission" required />
+        <br /><br />
+        <label for="fuel_type">Fuel Type:</label>
+        <input type="text" id="fuel_type" name="fuel_type" required />
+        <br /><br />
+        <label for="color">Color:</label>
+        <input type="text" id="color" name="color" required />
+        <br /><br />
+        <label for="technical_condition">Technical Condition:</label>
+        <input
+          type="text"
+          id="technical_condition"
+          name="technical_condition"
+          required
+        />
+        <br /><br />
+        <label for="customs_cleared">Customs Cleared:</label>
+        <input
+          type="text"
+          id="customs_cleared"
+          name="customs_cleared"
+          required
+        />
+        <br /><br />
+        <label for="driven_from">Driven From:</label>
+        <input type="text" id="driven_from" name="driven_from" required />
+        <br /><br />
+        <label for="engine_size">Engine Size:</label>
+        <input type="text" id="engine_size" name="engine_size" required />
+        <br /><br />
+        <label for="engine_name">Engine Name:</label>
+        <input type="text" id="engine_name" name="engine_name" required />
+        <br /><br />
+        <label for="engine_hp">Engine HP:</label>
+        <input type="text" id="engine_hp" name="engine_hp" required />
+        <br /><br />
+        <label for="location">Location:</label>
+        <input type="text" id="location" name="location" required />
+        <br /><br />
+        <label for="seller_id">Seller ID:</label>
+        <input type="text" id="seller_id" name="seller_id" required />
+        <br /><br />
+        <input type="submit" value="Add Car" />
+      </form>
+    </div>
+  </body>
 </html>

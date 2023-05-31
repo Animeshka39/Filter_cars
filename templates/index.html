@@ -109,6 +109,10 @@
                 carItem += "<p>Location: " + car.location + "</p>";
                 carItem += "<p>Seller ID: " + car.seller_id + "</p>";
                 carItem +=
+                "<button class='btn btn-primary seller-info-btn' data-model-id='" +
+                car.model_id +
+                "'>Show Seller Info</button>";
+                carItem +=
                   "<form class='delete-car-form' method='POST' action='/deletecar'>";
                 carItem +=
                   "<input type='hidden' name='model_id' value='" +
@@ -119,10 +123,22 @@
 
                 carList.append(carItem);
               });
+                            // Show Seller Info button click event
+              $(".seller-info-btn").click(function() {
+                var modelId = $(this).data("model-id");
+                var sellerInfoDiv = $("#seller-info-" + modelId);
+
+                $.get("/sellers?model_id=" + modelId, function(sellerInfo) {
+                  sellerInfoDiv.html("<p>Seller Name: " + sellerInfo.seller_name + "</p>" +
+                    "<p>Seller Email: " + sellerInfo.seller_email + "</p>" +
+                    "<p>Seller Phone: " + sellerInfo.seller_phone + "</p>" +
+                    "<p>Seller Location: " + sellerInfo.seller_location + "</p>");
+                });
+              });
             },
           });
         });
-
+        
         // Function to handle the delete car form submission
         $(document).on("submit", ".delete-car-form", function (e) {
           e.preventDefault();
@@ -140,6 +156,11 @@
           });
         });
       });
+
+      
+      
+      
+
     </script>
   </head>
   <body>
@@ -309,6 +330,10 @@
         <br /><br />
         <input type="submit" value="Add Car" />
       </form>
+    </div>
+
+        </div>
+      </div>
     </div>
   </body>
 </html>

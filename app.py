@@ -229,6 +229,32 @@ def delete_car():
     
     return redirect('/')
 
+@app.route("/sellers", methods=["GET"])
+def get_seller_info():
+    model_id = request.args.get("model_id")
+    
+    cur = conn.cursor()
+    query = """
+    SELECT sellers.seller_id, sellers.seller_name, sellers.seller_email, sellers.seller_phone, sellers.seller_location
+    FROM sellers
+    JOIN carmodels ON sellers.seller_id = carmodels.seller_id
+    WHERE carmodels.model_id = %s
+    """
+    cur.execute(query, (model_id,))
+    seller_info = cur.fetchone()
+    cur.close()
+    
+    if seller_info:
+        seller = {
+            "seller_id": seller_info[0],
+            "seller_name": seller_info[1],
+            "seller_email": seller_info[2],
+            "seller_phone": seller_info[3],
+            "seller_location": seller_info[4]
+        }
+        return jsonify(seller)
+    else:
+        return jsonify({"message": "Seller information not found for the given model ID."}), 404
 
 if __name__ == "__main__":
     app.run(debug=True)

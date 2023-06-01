@@ -232,14 +232,44 @@ def delete_car():
 @app.route('/sellers', methods=['GET'])
 def get_seller_info():
     model_id = request.args.get('model_id')
+    
     cur = conn.cursor(cursor_factory=psycopg2.extras.DictCursor)
     
-    query = "SELECT * FROM sellers WHERE seller_id IN (SELECT seller_id FROM carmodels WHERE model_id = %s)"
-    cur.execute(query, [model_id])
+    query = "SELECT s.seller_name, s.seller_email, s.seller_phone, s.seller_location FROM sellers s INNER JOIN carmodels c ON s.seller_id = c.seller_id WHERE c.model_id = %s"
     
-    sellers = cur.fetchall()
-    
-    return jsonify(sellers)
+    try:
+        cur.execute(query, (model_id,))
+        seller_info = cur.fetchone()
+
+        if seller_info:
+            response = {
+                'seller_name': seller_info['seller_name'],
+                'seller_email': seller_info['seller_email'],
+                'seller_phone': seller_info['seller_phone'],
+                'seller_location': seller_info['seller_location']
+            }
+        else:
+            response = {
+                'seller_name': 'Seller not found',
+                'seller_email': 'N/A',
+                'seller_phone': 'N/A',
+                'seller_location': 'N/A'
+            }
+
+        cur.close()
+        conn.commit()
+
+        return jsonify(response)
+    except Exception as e:
+        cur.close()
+        conn.rollback()
+        return str(e), 500
+
+
+
+
+
+
 
 if __name__ == "__main__":
     app.run(debug=True)

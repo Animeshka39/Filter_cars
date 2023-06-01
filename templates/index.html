@@ -121,32 +121,37 @@
 
                 carList.append(carItem);
               });
-                          // Click event listener for "Show Seller Info" button
-              $('.seller-info-btn').click(function() {
-                var modelId = $(this).data('model-id');
-                var sellerInfoContainer = $(this).siblings('.seller-info');
 
-                // Retrieve seller information using AJAX
-                $.get('/sellers', { model_id: modelId }, function(response) {
-                  if (response.length > 0) {
-                    var seller = response[0];
-                    var sellerInfo = "<p>Seller Name: " + seller.seller_name + "</p>";
-                    sellerInfo += "<p>Seller Email: " + seller.seller_email + "</p>";
-                    sellerInfo += "<p>Seller Phone: " + seller.seller_phone + "</p>";
-                    sellerInfo += "<p>Seller Location: " + seller.seller_location + "</p>";
-                    sellerInfoContainer.html(sellerInfo);
-                  } else {
-                    sellerInfoContainer.html("Seller information not found.");
-                  }
-
-                  // Show the seller information container
-                  sellerInfoContainer.show();
-                });
-              });
             },
           });
         });
+
+        $(document).ready(function() {
+          // Event listener for "Show Seller Info" button
+          $(document).on('click', '.seller-info-btn', function() {
+            var modelId = $(this).data('model-id');
+            var sellerInfoContainer = $(this).siblings('.seller-info');
         
+            // Retrieve seller information using AJAX
+            $.get('/sellers', { model_id: modelId }, function(response) {
+              if (response.seller_name !== 'Seller not found') {
+                var sellerInfo = "<p>Seller Name: " + response.seller_name + "</p>";
+                sellerInfo += "<p>Seller Email: " + response.seller_email + "</p>";
+                sellerInfo += "<p>Seller Phone: " + response.seller_phone + "</p>";
+                sellerInfo += "<p>Seller Location: " + response.seller_location + "</p>";
+                sellerInfoContainer.html(sellerInfo);
+              } else {
+                sellerInfoContainer.html("Seller information not found.");
+              }
+        
+              sellerInfoContainer.show();
+            });
+          });
+        });
+        
+      
+
+
         // Function to handle the delete car form submission
         $(document).on("submit", ".delete-car-form", function (e) {
           e.preventDefault();
